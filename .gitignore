@@ -143,4 +143,4 @@ docker-pipeline/output/
 docker-pipeline/config/
 docker-pipeline/venv/
 docker-pipeline/.python-version
-docker-pipeline/etl-assets/ontology/
+docker-pipeline/etl-assets/ontology/ncit.obo
