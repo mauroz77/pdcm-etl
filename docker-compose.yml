@@ -68,6 +68,8 @@ services:
       - ./docker-pipeline/output/etl_input_files:/app/data/input
       - ./docker-pipeline/output/etl_output:/app/data/output
       - ./docker-pipeline/config/luigi.cfg:/app/luigi.cfg
+      - ./etl:/app/etl:ro
+      - ./scripts:/app/scripts:ro
     # restart: unless-stopped
 
   postgrest_old:
