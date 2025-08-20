@@ -136,3 +136,11 @@ db-data/
 
 # Output files
 output/
+
+# Docker pipeline data files
+docker-pipeline/input/
+docker-pipeline/output/
+docker-pipeline/config/
+docker-pipeline/venv/
+docker-pipeline/.python-version
+docker-pipeline/etl-assets/ontology/

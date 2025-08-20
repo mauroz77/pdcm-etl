@@ -1,0 +1,61 @@
+version: "2"
+
+services:
+  lecternDb:
+    image: "bitnami/mongodb:4.0"
+    ports:
+      - "27272:27017"
+    volumes:
+      - "mongodb_data:/bitnami"
+    environment:
+      MONGODB_USERNAME: admin
+      MONGODB_PASSWORD: password
+      MONGODB_DATABASE: lectern
+      MONGODB_ROOT_PASSWORD: password123
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  lectern:
+    image: "ghcr.io/overture-stack/lectern:1.15.0"
+    depends_on:
+      - lecternDb
+    environment:
+      MONGO_URL: "mongodb://admin:password@lecternDb:27017/lectern"
+    ports:
+      - "3000:3000"       # Map host port 3000 to container port 3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  pdcm-lectern-validator:
+    image: "pdxfinder/pdcm-lectern-validator:prod"
+    depends_on:
+      lectern:
+        condition: service_healthy
+    environment:
+      LECTERN_URL: "http://lectern:3000"
+      DICTIONARY_VERSION: "2.2"
+      DICTIONARY_NAME: "CancerModels_Dictionary"
+      PORT: "3009"
+      BASE_URL: ""
+    ports:
+      - "3009:3009"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3009"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mongodb_data:
+    driver: local

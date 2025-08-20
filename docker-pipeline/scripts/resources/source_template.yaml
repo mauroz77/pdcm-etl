@@ -1,0 +1,9 @@
+model_generator: true
+pdcm_resource_description: null
+project: [PROJECT]
+provider_abbreviation: [PROVIDER_ABBREVIATION]
+provider_description: ''
+provider_name: [PROVIDER_NAME]
+provider_page_title: ''
+provider_type: [PROVIDER_TYPE]
+view_data_at: [VIEW_AT]

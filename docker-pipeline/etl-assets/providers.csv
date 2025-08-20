@@ -1,0 +1,46 @@
+abbreviation,name,view_data_at,provider_type,project_name
+BROD,Broad Institute,HCMI Searchable Catalog,academia,HCMI
+CCIA,Children's Cancer Institute,PIVOT,academia,PIVOT
+CDH,The Cancer Discovery Hub,CDH,academia,STCC
+CHOP,Children's Hospital of Philadelphia,PIVOT,academia,PIVOT
+CSHL,Cold Spring Harbor Laboratory,HCMI Searchable Catalog,academia,HCMI
+Curie-BC,Institut Curie - LIP - BC,Curie-BC,academia,EurOPDX
+Curie-LC,Institut Curie - LIP - LC,Curie-LC,academia and industry,EurOPDX
+Curie-OC,Institut Curie - LIP - OC,Curie-OC,academia,EurOPDX
+GCCRI,UT Health San Antonio Greehey Children's Cancer Research Institute,PIVOT,academia,PIVOT
+HCI-BCM,HCI-Baylor College of Medicine,HCI-BCM,Not provided,PDXNet
+IRCCS-CRC,Candiolo Cancer Institute - Colorectal,IRCCS-CRC,not provided,EurOPDX
+IRCCS-CRO,"IRCCS, Centro di Riferimento Oncologico di Aviano",IRCCS-CRO,academia,ACC-PCMC
+IRCCS-CSS,Fondazione IRCCS Casa Sollievo della Sofferenza,IRCCS-CSS,academia,ACC-PCMC
+IRCCS-DEB,National Institute of Research in Gastroenterology 'Saverio de Bellis',IRCCS-DEB,academia,ACC-PCMC
+IRCCS-GC,Candiolo Cancer Institute-Gastric,IRCCS-GC,academia,EurOPDX
+IRCCS-HSM-GE,IRCCS Ospedale Policlinico San Martino,IRCCS-HSM-GE,academia,ACC-PCMC
+IRCCS-ICH,IRCCS Istituto Clinico Humanitas,IRCCS-ICH,academia,ACC-PCMC
+IRCCS-IDI,Istituto Dermopatico Dell'Immacolata,IRCCS-IDI,academia,ACC-PCMC
+IRCCS-IOR,Istituto Ortopedico Rizzoli,IRCCS-IOR,academia,ACC-PCMC
+IRCCS-IRE,IRCCS Regina Elena National Cancer Institute,IRCCS-IRE,academia,ACC-PCMC
+IRCCS-IRFMN,Istituto di Ricerche Farmacologiche Mario Negri IRCCS,IRCCS-IRFMN,academia,ACC-PCMC
+IRCCS-IRST,The Istituto Romagnolo per lo Studio dei Tumori 'Dino Amadori',IRCCS-IRST,academia,ACC-PCMC
+IRCCS-ITGPII,IRCCS Istituto Tumori Giovanni Paolo II,IRCCS-ITGPII,academia,ACC-PCMC
+IRCCS-OPBG,Ospedale Pediatrico Bambino Gesù,IRCCS-OPBG,academia,ACC-PCMC
+IRCCS-PAS,Istituto Nazionale Tumori-IRCCS Fondazione G. Pascale,IRCCS-PAS,academia,ACC-PCMC
+LIH,Luxembourg Institute of Health-Glioma,LIH,academia,EurOPDX
+LurieChildrens,Ann & Robert H Lurie Children's Hospital of Chicago,PIVOT,academia,PIVOT
+MBDI,Monash Biomedicine Discovery Institute - Melbourne Urological Research Alliance,MBDI,academia,MURAL
+MDAnderson,MD Anderson Cancer Center,PDXNet,Not Provided,PDXNet
+MDAnderson-CCH,MD Anderson Children's Cancer Hospital,PIVOT,academia,PIVOT
+NKI,Netherlands Cancer Institute,NKI,academia,EurOPDX
+SANG,Wellcome Sanger Institute,HCMI Searchable Catalog,academia,HCMI
+SJCRH,St. Jude Children's Research Hospital,PIVOT,academia,PIVOT
+TRACE,TRACE-PDTX platform,TRACE,Academia,EurOPDX
+UCD,University of California - Davis,PDXNet,academia,PDXNet
+UMCG,University Medical Center Groningen,UMCG,academia,EurOPDX
+UOC-BC,Caldas Lab - University of Cambridge,UOC-BC,academia,EurOPDX
+UOM-BC,The University of Manchester,UOM-BC,academia,EurOPDX
+VHIO-BC,Vall d'Hebron Institute of Oncology,VHIO-BC,academia,EurOPDX
+VHIO-CRC,Val D'Hebron Cancer Institute- colorectal,VHIO-CRC,academia,EurOPDX
+VHIO-PC,Vall d'Hebron Institute of Oncology,VHIO-PC,academia,EurOPDX
+WCMC,Weill Cornell Medical College,HCMI Searchable Catalog,academia,HCMI
+Wistar-MDAnderson-Penn,Wistar-MDAnderson-Penn,PDXNet,academia,PDXNet
+WUSTL,Washington University in St. Louis,PDXNet,Not Provided,PDXNet
+TEST,Just a test,,Not Provided,

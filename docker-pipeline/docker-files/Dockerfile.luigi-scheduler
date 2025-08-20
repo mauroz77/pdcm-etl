@@ -1,0 +1,9 @@
+# Dockerfile.luigi-scheduler
+FROM spotify/luigi:latest
+
+USER root
+
+# Install curl and wget via Alpine's package manager
+RUN apk update && apk add curl wget
+
+USER nobody

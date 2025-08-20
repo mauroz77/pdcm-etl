@@ -1,0 +1,114 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: pdcm
+      POSTGRES_USER: pdcm_admin
+      POSTGRES_PASSWORD: pdcm_admin
+    ports:
+      - "5438:5432"
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - pdcm-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pdcm_admin -d pdcm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  luigi-scheduler:
+    build:
+      context: ./docker-pipeline/docker-files
+      dockerfile: Dockerfile.luigi-scheduler
+    command: ["--port", "8082"]
+    ports:
+      - "8082:8082"
+    networks:
+      - pdcm-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/static/visualiser/index.html"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      - db
+
+  luigi-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: pdcm
+      PGUSER: pdcm_admin
+      PGPASSWORD: pdcm_admin
+      PYTHONPATH: ".:/app"
+      PYSPARK_PYTHON: python3
+      LUIGI_SCHEDULER_HOST: luigi-scheduler
+      LUIGI_SCHEDULER_PORT: "8082"
+      ETL_ENVIRONMENT: local
+      LUIGI_CONFIG_PATH: luigi.cfg
+    networks:
+      - pdcm-net
+    command: >
+      bash -c "
+       LUIGI_CONFIG_PATH=luigi.cfg python -m luigi --module etl.workflow.main --scheduler-host luigi-scheduler PdcmEtl --workers 8
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+      luigi-scheduler:
+        condition: service_healthy
+    volumes:
+      - ./docker-pipeline/output/etl_input_files:/app/data/input
+      - ./docker-pipeline/output/etl_output:/app/data/output
+      - ./docker-pipeline/config/luigi.cfg:/app/luigi.cfg
+    # restart: unless-stopped
+
+  postgrest_old:
+    build:
+      context: ./docker-pipeline/docker-files
+      dockerfile: Dockerfile.postgrest
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:3000"
+    volumes:
+      - .docker-pipeline/config/postgrest.conf:/etc/postgrest.conf
+    networks:
+      - pdcm-net
+    command: ["postgrest", "/etc/postgrest.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgrest:
+    image: postgrest/postgrest
+    ports:
+      - "4000:3000"
+    environment:
+      PGRST_DB_URI: "postgres://pdcm_admin:pdcm_admin@db:5432/pdcm"
+      PGRST_DB_SCHEMA: "pdcm_api"
+      PGRST_DB_ANON_ROLE: "web_anon"
+      # Optional environment variables for logging, OpenAPI, etc.
+      PGRST_SERVER_PORT: "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pdcm-net
+
+volumes:
+  db-data:
+
+networks:
+  pdcm-net:
+    driver: bridge
