@@ -17,3 +17,9 @@ ETL_OUTPUT_DIR = "etl_output"
 
 # Folder (host), relative to `docker-pipeline` directory, where the luigi conf file will be created.
 CONFIG_DIR = "config"
+
+# Folder (host), relative to `docker-pipeline/{OUTPUT_DIR}` directory, where the data related to the BioStudies submmission will be stored.
+BIOSTUDIES_DIR = "biostudies"
+
+# Folder (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, where the submission files will be generated.
+SUBMISSION_DATA_DIR = "submission_data"

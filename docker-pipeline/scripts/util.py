@@ -130,3 +130,14 @@ def remove_compose_service(service_name, compose_dir):
         print(f"🧹 Removed old {service_name} container.")
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Could not remove {service_name} (might not exist): {e}")
+
+
+def exit_if_dir_not_exists(dir: Path):
+    """
+    Exit the program if the specified directory does not exist.
+
+    Args:
+        dir (Path): The directory to check.
+    """
+    if not dir.exists():
+        sys.exit(f"❌ Directory {dir.absolute()} does not exist.")

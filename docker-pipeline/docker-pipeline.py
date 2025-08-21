@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 import re
 from scripts.excel_validator import init_validator, validate_excel_files
+from scripts.biostudies_orchestrator import create_submission_files, launch_submission
 from scripts import xlsx_to_tsv
 from scripts.etl_orchestrator import launch_etl
 import scripts.constants as constants
@@ -130,34 +131,87 @@ def convert_excel_files_to_tsv(excel_files: list[Path], provider: str):
         xlsx_to_tsv.main(["-d", str(dir_to_process.absolute()), "-a"])
 
 
-def main():
+# def generate_submission_files(biostudies_path: Path):
+#     print("Generating submission files")
+#     biostudies_path = Path(__file__).parent / constants.OUTPUT_DIR / constants.BIOSTUDIES_DIR
+#     create_submission_files(biostudies_path)
+
+
+def get_biostudies_submission_dir_path():
+    return Path(__file__).parent / constants.OUTPUT_DIR / constants.BIOSTUDIES_DIR
+
+
+def handle_biostudies_submission(only_generate_files: bool):
+    biostudies_path = (
+        Path(__file__).parent / constants.OUTPUT_DIR / constants.BIOSTUDIES_DIR
+    )
+    create_submission_files(biostudies_path)
+
+
+def setup_args():
     parser = argparse.ArgumentParser(
         description="Run the Docker pipeline to process and submit cancer model metadata to BioStudies."
     )
     parser.add_argument(
-        "-p", "--provider", required=True, help="Provider name (e.g., 'PDCM', 'JAX')."
+        "-p",
+        "--provider",
+        required=True,
+        help="Provider name (e.g., 'PDCM', 'JAX'). Make sure an entry for this provider exists in etl-assets/providers.csv.",
+    )
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        help="Generate the submission files for BioStudies without actually submitting them.",
+        action="store_true",
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "-s",
+        "--submit-only",
+        help="Submit the metadata to BioStudies without generating any data. Use this flag if the data has already been processed and only submission is required.",
+        action="store_true",
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = setup_args()
 
     print("Starting Cancer Models to BioStudies pipeline (Docker version)...")
 
-    create_initial_folders()
+    biostudies_dir_path = get_biostudies_submission_dir_path()
 
-    provider = args.provider
-    print(f"Provider: {provider}")
+    submission_data_dir_path = biostudies_dir_path / constants.SUBMISSION_DATA_DIR
 
-    validate_provider(provider)
-    provider = provider.upper()
-    input_files = find_input_files(provider)
+    if args.submit_only:
+        print(
+            f"Running the pipeline with the --submit-only flag. No data will be generated, so the system expects data at {submission_data_dir_path} to already exist."
+        )
+        launch_submission(submission_data_dir_path)
+    else:
+        create_initial_folders()
 
-    validate_input_files(input_files)
+        provider = args.provider
 
-    convert_excel_files_to_tsv(input_files, provider)
+        validate_provider(provider)
+        provider = provider.upper()
+        input_files = find_input_files(provider)
 
-    print("Ready to continue with ETL stage")
+        validate_input_files(input_files)
 
-    launch_etl(provider)
+        convert_excel_files_to_tsv(input_files, provider)
+
+        print("Ready to continue with ETL stage")
+
+        launch_etl(provider)
+
+        print("Ready to create BioStudies submission files ...")
+        create_submission_files(biostudies_dir_path)
+
+        if not args.dry_run:
+            launch_submission(submission_data_dir_path)
+
+    print("✅ Pipeline finished.")
 
 
 def create_initial_folders():
@@ -165,8 +219,8 @@ def create_initial_folders():
     data_folder = Path.cwd() / constants.OUTPUT_DIR
 
     # Delete data_folder if it exists for a clean start
-    if data_folder.exists() and data_folder.is_dir():
-        shutil.rmtree(data_folder)
+    # if data_folder.exists() and data_folder.is_dir():
+    #     shutil.rmtree(data_folder)
 
     # Create the folder (and any missing parents if needed)
     data_folder.mkdir(parents=True, exist_ok=True)

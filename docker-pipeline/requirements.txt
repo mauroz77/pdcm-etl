@@ -3,3 +3,4 @@ openpyxl
 requests
 docker
 psycopg2
+biostudies-client
