@@ -115,7 +115,7 @@ def copy_etl_assets_to_etl_input_dir():
     new_location = (
         Path(__file__).parent.parent
         / constants.OUTPUT_DIR
-        / constants.HOST_ETL_INPUT_DIRECTORY_DIR
+        / constants.HOST_ETL_INPUT_DIR
     )
     dir_content_copy(ETL_ASSETS_DIR, new_location)
 

@@ -2,12 +2,9 @@ import os
 import requests
 import urllib.parse
 import json
-import argparse
 import re
 import datetime
 import time
-
-SKIP_PROCESSED = True
 
 # Define the endpoint and query parameters
 COLUMNS_TO_READ = [
@@ -149,6 +146,8 @@ ethnicity_groups = {
     ],
 }
 
+NOT_PROVIDED = "Not Provided"
+
 
 # Normalize helper
 def norm(s):
@@ -181,7 +180,7 @@ def clean_model_id(model_id):
 
 
 # Fetch and process data with pagination
-def fetch_and_process_data(output):
+def fetch_and_process_data(output, release_date, skip_processed=True):
     processed_data = []
     total_count = 0
     counter = 0
@@ -205,13 +204,13 @@ def fetch_and_process_data(output):
             cleaned_model_id = clean_model_id(model["external_model_id"])
             model["external_model_id"] = cleaned_model_id
             model_folder_path = f"{output}/{data_source}/{cleaned_model_id}"
-            if SKIP_PROCESSED:
+            if skip_processed:
                 if os.path.exists(model_folder_path):
                     print("Skip", model_folder_path)
                     skipped += 1
                     continue
             create_folder_if_not_exists(model_folder_path)
-            study = format_model(model, model_folder_path)
+            study = format_model(model, model_folder_path, release_date)
 
             json_file_name = f"{model_folder_path}/{cleaned_model_id}.json"
 
@@ -237,10 +236,10 @@ def fetch_and_process_data(output):
 
 
 def create_attribute(name, value):
-    return {"name": name, "value": value if value else "N/A"}
+    return {"name": name, "value": value if value else NOT_PROVIDED}
 
 
-def format_model(model, model_folder_path):
+def format_model(model, model_folder_path, release_date):
     start = time.time()
     study = {}
     # study["accno"] = model["external_model_id"] + "_" + model["data_source"]
@@ -259,7 +258,7 @@ def format_model(model, model_folder_path):
     title = f"[{model['data_source']}] [{model['model_type']}] [{model['external_model_id']}] {model['histology']}"
     attributes.append(create_attribute("Title", title))
     # release_date = date.today()
-    release_date = "2024-12-01"
+    # release_date = "2024-12-01"
     attributes.append(create_attribute("ReleaseDate", release_date))
     attributes.append(create_attribute("AttachTo", "CancerModelsOrg"))
 
@@ -433,24 +432,22 @@ def create_patient_tumor_subsection(model):
     subsection = {}
     attributes = []
     subsection["type"] = "Patient / Tumour Metadata"
-    attributes.append({"name": "Patient Sex", "value": model["patient_sex"]})
-    attributes.append({"name": "Patient Age", "value": model["patient_age"]})
+    attributes.append(create_attribute("Patient Sex", model["patient_sex"]))
+    attributes.append(create_attribute("Patient Age", model["patient_age"]))
+    attributes.append(create_attribute("Patient Ethnicity", model["patient_ethnicity"]))
     attributes.append(
-        {"name": "Patient Ethnicity", "value": model["patient_ethnicity"]}
-    )
-    attributes.append(
-        {
-            "name": "Patient Ethnicity Group",
-            "value": get_ethnicity_group(model["patient_ethnicity"]),
-        }
+        create_attribute(
+            "Patient Ethnicity Group",
+            get_ethnicity_group(model["patient_ethnicity"]),
+        )
     )
 
-    attributes.append({"name": "Tumour Type", "value": model["tumour_type"]})
-    attributes.append({"name": "Cancer System", "value": model["cancer_system"]})
-    attributes.append({"name": "Cancer Grade", "value": model["cancer_grade"]})
-    attributes.append({"name": "Cancer Stage", "value": model["cancer_stage"]})
-    attributes.append({"name": "Primary Site", "value": model["primary_site"]})
-    attributes.append({"name": "Collection Site", "value": model["collection_site"]})
+    attributes.append(create_attribute("Tumour Type", model["tumour_type"]))
+    attributes.append(create_attribute("Cancer System", model["cancer_system"]))
+    attributes.append(create_attribute("Cancer Grade", model["cancer_grade"]))
+    attributes.append(create_attribute("Cancer Stage", model["cancer_stage"]))
+    attributes.append(create_attribute("Primary Site", model["primary_site"]))
+    attributes.append(create_attribute("Collection Site", model["collection_site"]))
 
     subsection["attributes"] = attributes
     return subsection
@@ -943,7 +940,7 @@ def create_publication_subsection(model):
     rows = []
 
     for publication in publications:
-        if not publication:
+        if not publication or publication == {}:
             continue
         row = {"type": "Publications"}
         atributes = []
@@ -1154,7 +1151,7 @@ def write_molecular_data_file(data, file_path, fields):
             f.write("\n")
 
 
-def get_publication_data(pub_id):
+def get_publication_data_old(pub_id):
     if pub_id == "":
         return None
     url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/{pub_id.replace('PMID:', '')}?resultType=lite&format=json"
@@ -1179,20 +1176,39 @@ def get_publication_data(pub_id):
     }
 
 
-# Main function
-def main(output):
-    create_folder_if_not_exists(output)
-    processed_data = fetch_and_process_data(output)
+def get_publication_data(pub_id, max_retries=3, backoff=2):
+    if not pub_id:
+        return {}
 
+    url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/{pub_id.replace('PMID:', '')}?resultType=lite&format=json"
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Fetch, process, and formats CancerModels.org data into a structure that fits the BioStudies structurepython."
-    )
-    parser.add_argument(
-        "--output", required=True, help="Folder where the data will be downloaded"
-    )
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, timeout=10)  # always set a timeout
+            response.raise_for_status()
+            data = response.json()
 
-    args = parser.parse_args()
+            result = data.get("result", {})
 
-    main(args.output)
+            # Safely extract fields with fallback
+            return {
+                "title": result.get("title", "N/A"),
+                "pubYear": result.get("pubYear", "N/A"),
+                "authorString": result.get("authorString", "N/A"),
+                "journalTitle": result.get("journalTitle", "N/A"),
+                "journalVolume": result.get("journalVolume", "N/A"),
+                "journalIssn": result.get("journalIssn", "N/A"),
+                "issue": result.get("issue", "N/A"),
+                "pubType": result.get("pubType", "N/A"),
+                "pmid": result.get("pmid", "N/A"),
+                "doi": result.get("doi", "N/A"),
+            }
+
+        except (requests.RequestException, ValueError) as e:
+            # Could not fetch or parse response
+            if attempt < max_retries - 1:
+                time.sleep(backoff * (attempt + 1))  # exponential backoff
+            else:
+                # Last retry failed, log and fallback to empty dict
+                print(f"Failed to fetch {pub_id}: {e}")
+                return {}

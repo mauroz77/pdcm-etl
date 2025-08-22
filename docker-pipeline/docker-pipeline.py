@@ -171,6 +171,13 @@ def setup_args():
         help="Submit the metadata to BioStudies without generating any data. Use this flag if the data has already been processed and only submission is required.",
         action="store_true",
     )
+    parser.add_argument(
+        "-k",
+        "--keep-etl-folders",
+        help="Prevent deletion of ETL output folders before rerunning the process.",
+        action="store_true",
+    )
+
     return parser.parse_args()
 
 
@@ -189,7 +196,7 @@ def main():
         )
         launch_submission(submission_data_dir_path)
     else:
-        create_initial_folders()
+        create_initial_folders(args.keep_etl_folders)
 
         provider = args.provider
 
@@ -214,23 +221,36 @@ def main():
     print("✅ Pipeline finished.")
 
 
-def create_initial_folders():
+def create_initial_folders(keep_etl_folders: bool):
     # Path to the "data" folder inside the current working directory
     data_folder = Path.cwd() / constants.OUTPUT_DIR
 
-    # Delete data_folder if it exists for a clean start
-    # if data_folder.exists() and data_folder.is_dir():
-    #     shutil.rmtree(data_folder)
-
     # Create the folder (and any missing parents if needed)
     data_folder.mkdir(parents=True, exist_ok=True)
+
+    etl_input_path = data_folder / constants.HOST_ETL_INPUT_DIR
+    etl_output_path = data_folder / constants.HOST_ETL_OUTPUT_DIR
+
+    if keep_etl_folders:
+        print("ETL folders not deleted")
+    else:
+        print("Deleting any existing ETL folders")
+        if etl_input_path.exists() and etl_input_path.is_dir():
+            shutil.rmtree(etl_input_path)
+        if etl_output_path.exists() and etl_output_path.is_dir():
+            shutil.rmtree(etl_output_path)
+
+    etl_input_path.mkdir(parents=True, exist_ok=True)
+    etl_output_path.mkdir(parents=True, exist_ok=True)
 
     # Path to the "config" folder
     config_folder = Path.cwd() / constants.CONFIG_DIR
     config_folder.mkdir(parents=True, exist_ok=True)
 
     # create ETL_OUTPUT_DIRECTORY
-    etl_output_folder = Path.cwd() / constants.OUTPUT_DIR / constants.ETL_OUTPUT_DIR
+    etl_output_folder = (
+        Path.cwd() / constants.OUTPUT_DIR / constants.HOST_ETL_OUTPUT_DIR
+    )
     etl_output_folder.mkdir(parents=True, exist_ok=True)
 
 
