@@ -55,6 +55,10 @@ def init_validator():
     else:
         create_dictionary(LECTERN_URL, DICTIONARY_VERSION)
 
+    # Make sure dictionary is accessible before starting pdcm-lectern-validator
+    dictionary_url = f"{LECTERN_URL}/dictionaries?name={DICTIONARY_NAME}&version={DICTIONARY_VERSION}"
+    wait_for_service(dictionary_url)
+
     # Step 4: Start pdcm-lectern-validator container
     print("🚀 Starting pdcm-lectern-validator container...")
     try:
@@ -155,7 +159,7 @@ def create_dictionary(lectern_url="http://localhost:3000", dictionary_version="2
     with dictionary_file.open("r", encoding="utf-8") as f:
         dictionary_data = json.load(f)
 
-    # Lectern API endpoint — adjust path to match actual Lectern dictionary creation endpoint
+    # Lectern API endpoint
     endpoint = f"{lectern_url}/dictionaries"
 
     try:
@@ -171,50 +175,6 @@ def create_dictionary(lectern_url="http://localhost:3000", dictionary_version="2
     print(
         f"✅ Dictionary created successfully in Lectern (status: {response.status_code})"
     )
-
-
-# def validate_excel_file_original(excel_file_path: Path):
-#     """
-#     Validates an Excel file by uploading it to the pdcm-lectern-validator service.
-
-#     Args:
-#         excel_file_path (Path): Path to the Excel file to validate.
-#         validator_url (str): Full URL to the validation endpoint.
-
-#     Returns:
-#         dict: Parsed JSON response from the validation service.
-
-#     Exits:
-#         If the file does not exist or if the HTTP request fails.
-#     """
-#     if not excel_file_path.is_file():
-#         sys.exit(f"❌ Excel file not found: {excel_file_path}")
-
-#     print(f"📤 Uploading Excel file for validation: {excel_file_path}")
-
-#     with excel_file_path.open("rb") as f:
-#         files = {
-#             "file": (
-#                 excel_file_path.name,
-#                 f,
-#                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-#             )
-#         }
-#         try:
-#             response = requests.post(VALIDATOR_URL, files=files)
-#             response.raise_for_status()
-#         except requests.RequestException as e:
-#             sys.exit(f"❌ Validation request failed: {e}")
-
-#     try:
-#         json_response = response.json()
-#     except ValueError:
-#         sys.exit("❌ Failed to parse JSON response from validator.")
-
-#     print(f"✅ Validation response received:")
-#     print(json_response)
-
-#     return json_response
 
 
 def validate_excel_files(excel_files_paths: list[Path]):
