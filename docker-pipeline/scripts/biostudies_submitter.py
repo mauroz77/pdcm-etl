@@ -3,6 +3,12 @@ import json
 import os
 import shutil
 import requests
+from pathlib import Path
+from scripts.util import exit_if_dir_not_exists
+import scripts.constants as constants
+
+import datetime
+import time
 
 from biostudiesclient.api import Api
 from biostudiesclient.auth import Auth
@@ -11,9 +17,9 @@ import urllib
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-auth = Auth()
-auth.login()
-api = Api(auth)
+# auth = Auth()
+# auth.login()
+# api = Api(auth)
 
 BASE_URL = "https://www.ebi.ac.uk/"
 SEARCH_URL = BASE_URL + "biostudies/api/v1/search?query={model_id}"
@@ -217,6 +223,84 @@ def main(data_folder):
     print("Ended")
     print("skipped", skipped)
     print("Processed:", processed)
+
+
+def get_models_in_path(to_be_submitted_dir: Path):
+    models = [
+        {
+            "model_name": model_path.name,
+            "model_path": model_path,
+            "provider": model_path.parent.name,
+        }
+        for provider_dir in Path(to_be_submitted_dir).iterdir()
+        if provider_dir.is_dir()
+        for model_path in provider_dir.iterdir()
+        if model_path.is_dir()
+    ]
+    return models
+
+
+def get_formatted_datetime(datetime: datetime):
+    return datetime.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def submit_model(model: dict):
+    ok = False
+    accno = None
+    response = {}
+    # datetime.datetime.now()
+
+    now_formatted = get_formatted_datetime(datetime.datetime.now())
+    start = time.time()
+    print(
+        f"\Processing {model['provider']}/{model['model_name']}. Starting at {now_formatted}"
+    )
+
+    response["valid"] = ok
+    response["accno"] = accno
+    # This is a combination of 2 dicts
+    return model | response
+
+
+def create_report(path: Path, entries: list, headers: list):
+    with open(path, "w") as f:
+        f.write("\t".join(headers) + "\n")
+        for entry in entries:
+            values = []
+            for header in headers:
+                values.append(entry[header])
+            f.write("\t".join(values) + "\n")
+
+
+def submit_all(
+    to_be_submitted_dir: Path, submitted_ok_dir: Path, submission_failed: Path
+):
+    print("\n" + "=" * 40)
+    print("🚀 SUBMITTING TO BIOSTUDIES 🚀")
+    print("=" * 40 + "\n")
+
+    responses = []
+
+    to_be_submitted_dir.mkdir(parents=True, exist_ok=True)
+    submitted_ok_dir.mkdir(parents=True, exist_ok=True)
+    submission_failed.mkdir(parents=True, exist_ok=True)
+
+    models_to_submit = get_models_in_path(to_be_submitted_dir)
+    print(f"Found {len(models_to_submit)} models to submit")
+
+    for model in models_to_submit:
+        responses.append(submit_model(model))
+
+    # Preparing reports
+
+    ok_report_path = to_be_submitted_dir.parent / constants.OK_REPORT
+    ok_entries = [entry for entry in responses if entry["valid"]]
+    create_report(ok_report_path, ok_entries, ["provider", "model", "accno"])
+
+    failed_report_path = to_be_submitted_dir.parent / constants.ERROR_REPORT
+    failed_entries = [entry for entry in responses if not entry["valid"]]
+
+    create_report(failed_report_path, failed_entries, ["provider", "model_name"])
 
 
 if __name__ == "__main__":

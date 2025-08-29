@@ -33,8 +33,11 @@ SUBMITTED_OK_DIR = "submitted_ok"
 # Folder (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, with the submission files that failed in the submission process
 SUBMISSIONS_FAILED_DIR = "submission_failed"
 
-
-# BIOSTUDIES_API_URL = "BIOSTUDIES_API_URL"
 BIOSTUDIES_USERNAME = "BIOSTUDIES_USERNAME"
 BIOSTUDIES_PASSWORD = "BIOSTUDIES_PASSWORD"
-# BIOSTUDIES_TOKEN = "BIOSTUDIES_TOKEN"
+
+# File (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, with the list of sucessfully submitted models is.
+OK_REPORT = "submitted_report.tsv"
+
+# File (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, with the list of failed submissions is.
+ERROR_REPORT = "submission_errors_report.tsv"
