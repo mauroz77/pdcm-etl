@@ -2,8 +2,10 @@
 
 from pathlib import Path
 from datetime import date
+import os
+import sys
 import scripts.constants as constants
-from scripts.util import exit_if_dir_not_exists
+from scripts.util import exit_if_dir_not_exists, dir_content_copy
 from scripts.biostudies_data_formatter import fetch_and_process_data
 
 
@@ -18,3 +20,23 @@ def create_submission_files(dir: Path):
 def launch_submission(dir: Path):
     print(f"Start submission process. Submission data at {dir.absolute()}")
     exit_if_dir_not_exists(dir)
+    copy_submission_data_to_processing_dir(dir)
+    check_env_vars_exist()
+
+    # ...
+    # Here we need to call logic to submission...
+    # ... How to implement retry?
+    # ... Create a report: model_id vs accession id
+
+
+def copy_submission_data_to_processing_dir(submission_dir: Path):
+    to_be_submitted = submission_dir.parent / constants.TO_BE_SUBMITTED_DIR
+    dir_content_copy(submission_dir, to_be_submitted, verbose=False)
+
+
+def check_env_vars_exist():
+    if not os.environ.get(constants.BIOSTUDIES_USERNAME):
+        sys.exit(f"❌ Env var {constants.BIOSTUDIES_USERNAME} does not exist.")
+    if not os.environ.get(constants.BIOSTUDIES_PASSWORD):
+        sys.exit(f"❌ Env var {constants.BIOSTUDIES_PASSWORD} does not exist.")
+    print("Env vars in place")

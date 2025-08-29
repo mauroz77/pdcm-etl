@@ -66,7 +66,7 @@ def copy_file_with_dirs(src_path, dest_path):
     print(f"✅ Copied {src} → {dest}")
 
 
-def dir_content_copy(source_dir, destination_dir):
+def dir_content_copy(source_dir, destination_dir, verbose=True):
     """
     Copy all contents of source directory to destination directory,
     mimicking Docker COPY behavior.
@@ -84,8 +84,9 @@ def dir_content_copy(source_dir, destination_dir):
     source_path = Path(source_dir)
     dest_path = Path(destination_dir)
 
-    print("FROM", source_path)
-    print("TO", destination_dir)
+    if verbose:
+        print("FROM", source_path)
+        print("TO", destination_dir)
 
     # Check if source directory exists
     if not source_path.exists() or not source_path.is_dir():
@@ -107,12 +108,13 @@ def dir_content_copy(source_dir, destination_dir):
         if item.is_file():
             # Copy file, overwriting if it exists
             shutil.copy2(item, dest_item)
-            print(f"Copied file: {item} -> {dest_item}")
+            if verbose:
+                print(f"Copied file: {item} -> {dest_item}")
         elif item.is_dir():
             # Recursively copy directory contents
             if dest_item.exists():
                 # Directory exists, merge contents
-                dir_content_copy(str(item), str(dest_item))
+                dir_content_copy(str(item), str(dest_item), verbose)
             else:
                 # Directory doesn't exist, copy entire directory
                 shutil.copytree(item, dest_item)

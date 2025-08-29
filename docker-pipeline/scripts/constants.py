@@ -23,3 +23,18 @@ BIOSTUDIES_DIR = "biostudies"
 
 # Folder (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, where the submission files will be generated.
 SUBMISSION_DATA_DIR = "submission_data"
+
+# Folder (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, with all the submission files to be submitted
+TO_BE_SUBMITTED_DIR = "to_be_submitted"
+
+# Folder (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, with the submission files that were successfuly submitted
+SUBMITTED_OK_DIR = "submitted_ok"
+
+# Folder (host), relative to `docker-pipeline/{OUTPUT_DIR}/{BIOSTUDIES_DIR}` directory, with the submission files that failed in the submission process
+SUBMISSIONS_FAILED_DIR = "submission_failed"
+
+
+# BIOSTUDIES_API_URL = "BIOSTUDIES_API_URL"
+BIOSTUDIES_USERNAME = "BIOSTUDIES_USERNAME"
+BIOSTUDIES_PASSWORD = "BIOSTUDIES_PASSWORD"
+# BIOSTUDIES_TOKEN = "BIOSTUDIES_TOKEN"

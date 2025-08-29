@@ -165,16 +165,22 @@ def setup_args():
         action="store_true",
     )
 
-    parser.add_argument(
-        "-s",
-        "--submit-only",
-        help="Submit the metadata to BioStudies without generating any data. Use this flag if the data has already been processed and only submission is required.",
-        action="store_true",
-    )
+    # parser.add_argument(
+    #     "-s",
+    #     "--submit-only",
+    #     help="Submit the metadata to BioStudies without generating any data. Use this flag if the data has already been processed and only submission is required.",
+    #     action="store_true",
+    # )
     parser.add_argument(
         "-k",
         "--keep-etl-folders",
         help="Prevent deletion of ETL output folders before rerunning the process.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-s",
+        "--submit-only",
+        help="Resubmits using existing submission files in the directory, without regenerating them.",
         action="store_true",
     )
 
