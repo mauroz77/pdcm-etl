@@ -1050,6 +1050,7 @@ def get_link_by_resource(links, resource):
 
 def clean_file_name(original_name):
     clean = re.sub(r"[\s/\\?%*:|\"<>\x7F\x00-\x1F]", "-", original_name)
+    clean = clean.replace(",", "")
     return clean
 
 
@@ -1151,29 +1152,29 @@ def write_molecular_data_file(data, file_path, fields):
             f.write("\n")
 
 
-def get_publication_data_old(pub_id):
-    if pub_id == "":
-        return None
-    url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/{pub_id.replace('PMID:', '')}?resultType=lite&format=json"
+# def get_publication_data_old(pub_id):
+#     if pub_id == "":
+#         return None
+#     url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/{pub_id.replace('PMID:', '')}?resultType=lite&format=json"
 
-    response = requests.get(url)
-    response.raise_for_status()
-    data = response.json()
+#     response = requests.get(url)
+#     response.raise_for_status()
+#     data = response.json()
 
-    result = data["result"]
+#     result = data["result"]
 
-    return {
-        "title": result.get("title", "N/A"),
-        "pubYear": result.get("pubYear", "N/A"),
-        "authorString": result.get("authorString", "N/A"),
-        "journalTitle": result.get("journalTitle", "N/A"),
-        "journalVolume": result.get("journalVolume", "N/A"),
-        "journalIssn": result.get("journalIssn", "N/A"),
-        "issue": result.get("issue", "N/A"),
-        "pubType": result.get("pubType", "N/A"),
-        "pmid": result.get("pmid", "N/A"),
-        "doi": result.get("doi", "N/A"),
-    }
+#     return {
+#         "title": result.get("title", "N/A"),
+#         "pubYear": result.get("pubYear", "N/A"),
+#         "authorString": result.get("authorString", "N/A"),
+#         "journalTitle": result.get("journalTitle", "N/A"),
+#         "journalVolume": result.get("journalVolume", "N/A"),
+#         "journalIssn": result.get("journalIssn", "N/A"),
+#         "issue": result.get("issue", "N/A"),
+#         "pubType": result.get("pubType", "N/A"),
+#         "pmid": result.get("pmid", "N/A"),
+#         "doi": result.get("doi", "N/A"),
+#     }
 
 
 def get_publication_data(pub_id, max_retries=3, backoff=2):

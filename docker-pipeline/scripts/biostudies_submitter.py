@@ -21,8 +21,9 @@ from urllib3.util.retry import Retry
 # auth.login()
 # api = Api(auth)
 
-BASE_URL = "https://www.ebi.ac.uk/"
-SEARCH_URL = BASE_URL + "biostudies/api/v1/search?query={model_id}"
+BASE_URL = "https://wwwdev.ebi.ac.uk/"
+# SEARCH_URL = BASE_URL + "biostudies/api/v1/search?query=title%3A{model_id_encoded}"
+SEARCH_URL_TEMPLATE = f"{BASE_URL}biostudies/api/v1/CancerModelsOrg/search?query=title%3A{{model_id_encoded}}"
 
 CHECK_IF_EXISTS = False
 
@@ -137,7 +138,7 @@ def exists_already_old(model_id):
     return accession
 
 
-def exists_already(model_id):
+def exists_already_old1(model_id):
     header = {"X-SESSION-TOKEN": get_password_from_env()}
     model_id_encoded = model_id.replace(" ", "+")
     url = (
@@ -163,6 +164,28 @@ def exists_already(model_id):
             accession = data["accno"]
             print(f"Model {model_id} existed under accession {accession}")
 
+    return accession
+
+
+def exists_already(model_id):
+    model_id_encoded = model_id.replace(" ", "+")
+    url = SEARCH_URL_TEMPLATE.format(model_id_encoded=model_id_encoded)
+
+    response = requests.get(url)
+    response.raise_for_status()
+    data = response.json()
+
+    accession = None
+
+    # We might get several results so filtering the exact result is necessary
+    hits = data["hits"]
+    # print(hits)
+    if hits and hits != []:
+        # Verify by matching the title
+        for element in hits:
+            if f"[{model_id}]" in element.get("title", ""):
+                accession = element["accession"]
+    print("accession>>", accession)
     return accession
 
 
@@ -245,29 +268,39 @@ def get_formatted_datetime(datetime: datetime):
 
 
 def submit_model(model: dict):
-    ok = False
+    ok = True
     accno = None
+    note = ""
     response = {}
     # datetime.datetime.now()
 
     now_formatted = get_formatted_datetime(datetime.datetime.now())
     start = time.time()
     print(
-        f"\Processing {model['provider']}/{model['model_name']}. Starting at {now_formatted}"
+        f"Processing {model['provider']}/{model['model_name']}. Starting at {now_formatted}"
     )
+    existing_accno = exists_already(model["model_name"])
+    if existing_accno:
+        note = "Already existed"
+        accno = existing_accno
 
     response["valid"] = ok
     response["accno"] = accno
+    response["note"] = note
     # This is a combination of 2 dicts
     return model | response
 
 
 def create_report(path: Path, entries: list, headers: list):
+    print("headers", headers)
     with open(path, "w") as f:
         f.write("\t".join(headers) + "\n")
         for entry in entries:
             values = []
             for header in headers:
+                print("header", header)
+                print("entry", entry)
+                print("entry[header]", entry[header])
                 values.append(entry[header])
             f.write("\t".join(values) + "\n")
 
@@ -295,11 +328,12 @@ def submit_all(
 
     ok_report_path = to_be_submitted_dir.parent / constants.OK_REPORT
     ok_entries = [entry for entry in responses if entry["valid"]]
-    create_report(ok_report_path, ok_entries, ["provider", "model", "accno"])
+    create_report(
+        ok_report_path, ok_entries, ["provider", "model_name", "accno", "note"]
+    )
 
     failed_report_path = to_be_submitted_dir.parent / constants.ERROR_REPORT
     failed_entries = [entry for entry in responses if not entry["valid"]]
-
     create_report(failed_report_path, failed_entries, ["provider", "model_name"])
 
 
