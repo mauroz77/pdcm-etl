@@ -274,15 +274,20 @@ def submit_model(model: dict):
     response = {}
     # datetime.datetime.now()
 
+    model_name = model["model_name"]
+    model_path = model["model_path"]
+    provider = model["provider"]
+
     now_formatted = get_formatted_datetime(datetime.datetime.now())
     start = time.time()
-    print(
-        f"Processing {model['provider']}/{model['model_name']}. Starting at {now_formatted}"
-    )
+    print(f"\nProcessing {provider}/{model_name}. Starting at {now_formatted}")
     existing_accno = exists_already(model["model_name"])
     if existing_accno:
         note = "Already existed"
         accno = existing_accno
+
+    validate_submission_file(model_name, model_path)
+    submit_files(model_path, model_name, provider)
 
     response["valid"] = ok
     response["accno"] = accno
@@ -291,16 +296,48 @@ def submit_model(model: dict):
     return model | response
 
 
+def validate_submission_file(model_name: str, model_path: str):
+    if not model_path:
+        raise ValueError("Null path for submission file")
+    model_submission_file_path = os.path.join(model_path, f"{model_name}.json")
+
+    if not os.path.exists(model_submission_file_path):
+        raise ValueError(f"No submission file {model_submission_file_path} found")
+
+    file_size = os.path.getsize(model_submission_file_path)
+    if file_size == 0:
+        raise ValueError(f"Submission file {model_submission_file_path} is empty")
+
+    return model_submission_file_path
+
+
+def submit_files(model_path: str, model_name: str, provider: str):
+    files_folder_name = "molecular_data"
+    files_directory = os.path.join(model_path, files_folder_name)
+
+    if os.path.exists(files_directory):
+        files = [
+            os.path.join(provider, model_name, files_folder_name, f)
+            for f in os.listdir(files_directory)
+            if os.path.isfile(os.path.join(files_directory, f))
+            and f.__contains__(".tsv")
+        ]
+        for file in files:
+            print("\tUploading", file)
+            file_name = file.split(files_folder_name + "/")[1]
+            local_path = os.path.join(files_directory, file_name)
+            # Uploads file to BioStudies
+            # api.upload_file(local_path, file)
+
+        print("Files updated")
+
+
 def create_report(path: Path, entries: list, headers: list):
-    print("headers", headers)
     with open(path, "w") as f:
         f.write("\t".join(headers) + "\n")
         for entry in entries:
             values = []
             for header in headers:
-                print("header", header)
-                print("entry", entry)
-                print("entry[header]", entry[header])
                 values.append(entry[header])
             f.write("\t".join(values) + "\n")
 
